@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quill — Quotes for every mood</title>
+<meta name="theme-color" content="#FF6F59">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FBF5EF; --surface: #FFFFFF; --surface-2: #F7ECE3;
+    --ink: #2E2422; --ink-soft: #8A7A72;
+    --accent: #E4567B; --accent-soft: #FBDCE4;
+    --accent-2: #C0587A; --accent-2-soft: #F5DCE6; --gold: #C97F1E; --gold-soft: #F6E3C4;
+    --border: #EDE0D3; --font-serif: 'Fraunces', serif;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #211B19; --surface: #2B2422; --surface-2: #342A27;
+      --ink: #F5ECE7; --ink-soft: #C4B0A8;
+      --accent-soft: #4A2A32; --accent-2-soft: #402831; --gold: #F0BE6B; --gold-soft: #3B331F;
+      --border: #40332E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #211B19; --surface: #2B2422; --surface-2: #342A27;
+    --ink: #F5ECE7; --ink-soft: #C4B0A8;
+    --accent-soft: #4A2A32; --accent-2-soft: #402831; --gold: #F0BE6B; --gold-soft: #3B331F;
+    --border: #40332E;
+  }
+  :root[data-palette="rose"] { --bg:#FAF3ED; --surface:#FFFFFF; --surface-2:#FFF1E6; --ink:#33262B; --ink-soft:#7A6A70; --accent:#B85C6B; --accent-soft:#F1D9DD; --accent-2:#5C7A5E; --gold:#B9862F; --gold-soft:#F3E6CC; --border:#EAD9CD; }
+  :root[data-palette="rose"][data-theme="dark"] { --bg:#211A1D; --surface:#2B2225; --surface-2:#33272A; --ink:#F3E9EB; --ink-soft:#C4AFB5; --accent:#E38A98; --accent-soft:#4A2E33; --accent-2:#8FB694; --gold:#E0B45F; --gold-soft:#40331C; --border:#403236; }
+  :root[data-palette="teal"] { --bg:#F1FAF8; --surface:#FFFFFF; --surface-2:#E6F5F1; --ink:#132C28; --ink-soft:#5E7A75; --accent:#1F9E8B; --accent-soft:#D3F0EA; --accent-2:#E8A33D; --gold:#C97F1E; --gold-soft:#F6E3C4; --border:#D8ECE7; }
+  :root[data-palette="teal"][data-theme="dark"] { --bg:#0F1E1B; --surface:#16302B; --surface-2:#1B3A33; --ink:#E7F5F1; --ink-soft:#9BC4BB; --accent:#3FCBB0; --accent-soft:#1C3F38; --accent-2:#F2BE6B; --gold:#F0BE6B; --gold-soft:#3B331F; --border:#264841; }
+  :root[data-palette="plum"] { --bg:#F6F3FC; --surface:#FFFFFF; --surface-2:#ECE5FA; --ink:#2B1F3D; --ink-soft:#7A6B92; --accent:#8B5CF6; --accent-soft:#E7DBFB; --accent-2:#F5A623; --gold:#C9821E; --gold-soft:#F6E1BF; --border:#E2D6F7; }
+  :root[data-palette="plum"][data-theme="dark"] { --bg:#1C1730; --surface:#251E3D; --surface-2:#2C2349; --ink:#F1ECFB; --ink-soft:#BBAEDB; --accent:#A98BFA; --accent-soft:#3A2E5A; --accent-2:#F5C06B; --gold:#F0BE6B; --gold-soft:#3B331F; --border:#3A3059; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: 'Outfit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #app {
+    width: 100%; max-width: 440px; height: 100vh; height: 100dvh;
+    background: var(--bg); display: flex; flex-direction: column;
+    position: fixed; top: 0; bottom: 0; left: 50%; transform: translateX(-50%);
+    overflow: hidden; transition: background .3s ease;
+  }
+  #app.font-alt .feed-text, #app.font-alt .quote-text, #app.font-alt .brand, #app.font-alt .ai-result-card .quote-text {
+    font-family: 'Playfair Display', serif;
+  }
+  header {
+    padding: calc(16px + var(--safe-top)) 20px 12px; display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0; background: var(--bg); z-index: 20;
+  }
+  .brand { font-family: var(--font-serif); font-weight: 600; font-size: 24px; }
+  .brand span { color: var(--accent); }
+  .icon-btn { width: 38px; height: 38px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink); flex-shrink:0; transition: transform .15s ease, background .2s ease; }
+  .icon-btn:active { transform: scale(0.88) rotate(-8deg); }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .view { display: none; flex: 1; min-height: 0; }
+  .view.active { display: flex; flex-direction: column; animation: viewIn .32s cubic-bezier(.2,.8,.3,1); }
+  @keyframes viewIn { from{opacity:0; transform: translateY(10px);} to{opacity:1; transform: translateY(0);} }
+  @media (prefers-reduced-motion: reduce) { .view.active { animation: none; } }
+  .scroll-pad { overflow-y: auto; padding: 4px 20px 26px; flex: 1; min-height: 0; }
+
+  h1.page-title { font-family: var(--font-serif); font-size: 21px; font-weight: 500; margin: 6px 0 4px; }
+  p.page-note { color: var(--ink-soft); font-size: 13px; margin: 0 0 16px; line-height: 1.5; }
+
+  /* ---- Feed (Home) ---- */
+  .feed { flex: 1; min-height: 0; overflow-y: auto; scroll-snap-type: y proximity; padding: 8px 20px 20px; }
+  .feed-item { min-height: calc(100% - 8px); scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; padding: 6px 0 22px; }
+  .feed-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+    padding: 28px 22px 20px; display: flex; flex-direction: column; justify-content: space-between; min-height: 220px;
+    opacity: 0; transform: translateY(26px) scale(.97); transition: opacity .55s ease, transform .55s cubic-bezier(.2,.8,.3,1);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.02);
+  }
+  .feed-card.in-view { opacity: 1; transform: translateY(0) scale(1) rotate(var(--tilt, 0deg)); }
+  .feed-card.today { background: linear-gradient(155deg, var(--gold-soft), var(--surface) 70%); border-color: var(--gold-soft); }
+  @media (prefers-reduced-motion: reduce) { .feed-card { opacity:1; transform:none; transition:none; } }
+  .feed-tag-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .cat-tag { font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 999px; color: #fff; }
+  .today-label { font-size: 11px; font-weight: 600; color: var(--gold); }
+  .feed-text { font-family: var(--font-serif); font-style: italic; font-size: 19px; line-height: 1.55; margin: 0 0 16px; }
+  .feed-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+  .feed-author { font-size: 13px; font-weight: 600; color: var(--accent); }
+  .action-row { display: flex; gap: 8px; }
+  .mini-btn { width: 34px; height: 34px; border-radius: 999px; border: none; background: var(--surface-2); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); flex-shrink:0; position: relative; transition: transform .18s cubic-bezier(.3,1.5,.5,1), background .2s ease, color .2s ease; }
+  .mini-btn:active { transform: scale(0.86); }
+  .mini-btn.active { color: var(--accent); background: var(--accent-soft); }
+  .mini-btn.pop { animation: heartPop .45s cubic-bezier(.3,1.8,.4,1); }
+  @keyframes heartPop { 0%{transform:scale(1);} 35%{transform:scale(1.45);} 60%{transform:scale(0.9);} 100%{transform:scale(1);} }
+  .mini-btn svg { width: 16px; height: 16px; }
+  .scroll-hint { text-align: center; font-size: 11.5px; color: var(--ink-soft); padding: 4px 0 2px; }
+  header { position: relative; }
+  header::after { content: ''; position: absolute; left: 20px; right: 20px; bottom: 0; height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--gold), var(--accent)); background-size: 300% 100%;
+    animation: hueMove 7s linear infinite; opacity: .55; }
+  @keyframes hueMove { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
+  .tab-btn { transition: color .2s ease, transform .15s ease; }
+  .tab-btn:active { transform: scale(0.88); }
+  .theme-swatches { display: flex; gap: 8px; }
+  .swatch-btn { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  .swatch-btn.active { border-color: var(--ink); }
+  .author-chip-row { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 2px; }
+  .author-chip { flex-shrink: 0; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 500; color: var(--ink-soft); cursor: pointer; white-space: nowrap; }
+  .author-chip:active { transform: scale(0.94); }
+
+  .chip-row { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; flex-shrink:0; }
+  .chip { flex-shrink: 0; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12.5px; font-weight: 500; color: var(--ink-soft); cursor: pointer; transition: all .18s ease; }
+  .chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); transform: scale(1.04); }
+  .section-label { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin: 22px 0 10px; }
+
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cat-tile { border-radius: 18px; padding: 18px 16px; cursor: pointer; color: #fff; min-height: 78px; display: flex; flex-direction: column; justify-content: space-between; transition: transform .15s ease; }
+  .cat-tile:active { transform: scale(0.95); }
+  .cat-tile .cat-name { font-weight: 600; font-size: 14.5px; }
+  .cat-tile .cat-count { font-size: 11px; opacity: 0.85; }
+
+  .quote-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 18px 18px 14px; margin-bottom: 12px; animation: cardFade .4s ease; }
+  @keyframes cardFade { from{opacity:0; transform: translateY(8px);} to{opacity:1; transform:translateY(0);} }
+  .quote-card .quote-text { font-family: var(--font-serif); font-style: italic; font-size: 16px; line-height: 1.5; margin: 0 0 12px; }
+  .quote-card .quote-footer { display: flex; align-items: center; justify-content: space-between; }
+  .quote-card .quote-author { font-size: 12.5px; font-weight: 600; color: var(--accent); }
+
+  .search-box { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 12px 16px; margin-bottom: 14px; flex-shrink:0; }
+  .search-box svg { width: 18px; height: 18px; color: var(--ink-soft); flex-shrink: 0; }
+  .search-box input { border: none; outline: none; background: transparent; font-family: 'Outfit'; font-size: 14px; width: 100%; color: var(--ink); }
+
+  .mode-toggle { display: flex; background: var(--surface-2); border-radius: 999px; padding: 4px; gap: 4px; margin-bottom: 14px; flex-shrink:0; }
+  .mode-toggle button { flex: 1; padding: 9px 0; border: none; border-radius: 999px; background: transparent; font-family: 'Outfit'; font-size: 13px; font-weight: 500; color: var(--ink-soft); cursor: pointer; transition: all .2s ease; }
+  .mode-toggle button.active { background: var(--surface); color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+  .author-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .author-chip { padding: 9px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12.5px; font-weight: 500; color: var(--ink); cursor: pointer; transition: transform .15s ease; }
+  .author-chip:active { transform: scale(0.94); }
+
+  .empty-state { text-align: center; padding: 46px 20px; color: var(--ink-soft); }
+  .empty-state .emoji { font-size: 32px; margin-bottom: 10px; }
+  .empty-state p { font-size: 13px; margin: 0; line-height: 1.6; }
+
+  .mood-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .mood-chip { padding: 9px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 13px; cursor: pointer; color: var(--ink); transition: transform .15s ease; }
+  .mood-chip:active { transform: scale(0.93); }
+  .ai-input-row { display: flex; gap: 8px; margin-bottom: 6px; }
+  .ai-input-row input { flex: 1; border: 1px solid var(--border); border-radius: 14px; padding: 13px 15px; font-family: 'Outfit'; font-size: 14px; background: var(--surface); color: var(--ink); }
+  .ai-input-row input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  .ai-go-btn { width: 48px; border: none; border-radius: 14px; background: var(--accent-2); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink:0; transition: transform .15s ease; }
+  .ai-go-btn:active { transform: scale(0.9) rotate(-10deg); }
+  .ai-go-btn svg { width: 18px; height: 18px; }
+  .ai-result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 22px 20px 16px; margin-top: 18px; min-height: 100px; animation: cardFade .4s ease; }
+  .ai-result-card .quote-text { font-family: var(--font-serif); font-style: italic; font-size: 17px; line-height: 1.55; margin: 0 0 14px; }
+  .ai-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .ai-actions button { flex: 1; padding: 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); font-family: 'Outfit'; font-size: 12.5px; font-weight: 500; color: var(--ink); cursor: pointer; transition: transform .15s ease; }
+  .ai-actions button:active { transform: scale(0.95); }
+  .ai-actions button.primary { background: var(--accent-2); color: #fff; border: none; }
+  .ai-note { font-size: 12px; color: var(--ink-soft); text-align: center; margin-top: 10px; }
+  .thinking-dots::after { content: '·'; animation: dots 1.2s steps(4) infinite; }
+  @keyframes dots { 0%{content:'·';} 33%{content:'··';} 66%{content:'···';} 100%{content:'·';} }
+
+  nav.tabbar { flex-shrink:0; display: flex; justify-content: space-around; align-items: center; background: var(--surface); border-top: 1px solid var(--border); padding: 10px 4px calc(10px + var(--safe-bottom)); z-index: 30; }
+  .tab-btn { background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--ink-soft); cursor: pointer; padding: 4px 5px; transition: transform .18s cubic-bezier(.3,1.5,.5,1), color .2s ease; }
+  .tab-btn svg { width: 20px; height: 20px; }
+  .tab-btn span { font-size: 9.5px; font-weight: 500; }
+  .tab-btn.active { color: var(--accent); transform: translateY(-2px); }
+
+  .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 40; }
+  .sheet-overlay.show { opacity: 1; pointer-events: auto; }
+  .sheet { position: absolute; left: 50%; bottom: 0; transform: translate(-50%, 100%); width: 100%; max-width: 440px; background: var(--surface); border-radius: 22px 22px 0 0; padding: 22px 22px calc(26px + var(--safe-bottom)); transition: transform .3s cubic-bezier(.2,.9,.3,1); max-height: 82vh; overflow-y: auto; }
+  .sheet-overlay.show .sheet { transform: translate(-50%, 0); }
+  .sheet h3 { font-family: var(--font-serif); font-weight: 500; font-size: 18px; margin: 0 0 16px; }
+  .tool-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .tool-row:last-of-type { border-bottom: none; }
+  .switch { width: 42px; height: 24px; border-radius: 999px; background: var(--border); position: relative; cursor: pointer; flex-shrink: 0; transition: background .2s ease; }
+  .switch::after { content:''; position:absolute; width:18px; height:18px; border-radius:50%; background:#fff; top:3px; left:3px; transition: transform .25s cubic-bezier(.3,1.4,.4,1); }
+  .switch.on { background: var(--accent); }
+  .switch.on::after { transform: translateX(18px); }
+  .size-controls { display: flex; gap: 8px; }
+  .size-controls button { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface-2); cursor: pointer; color: var(--ink); transition: transform .15s ease; }
+  .size-controls button:active { transform: scale(0.85); }
+  .theme-swatches { display: flex; gap: 10px; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform .15s ease, border-color .15s ease; flex-shrink: 0; }
+  .swatch.active { border-color: var(--ink); transform: scale(1.12); }
+  .swatch:active { transform: scale(0.9); }
+  .font-toggle { display: flex; gap: 8px; }
+  .font-toggle button { padding: 8px 13px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); font-size: 12.5px; cursor: pointer; color: var(--ink); }
+  .font-toggle button.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .clear-btn-sm { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); font-family: 'Outfit'; font-size: 12.5px; color: var(--ink); cursor: pointer; }
+
+  .share-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 4px; }
+  .share-item { display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: var(--ink); font-size: 10.5px; transition: transform .15s ease; }
+  .share-item:active { transform: scale(0.92); }
+  .share-icon { width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .share-icon svg { width: 22px; height: 22px; }
+
+  .toast { position: fixed; bottom: calc(96px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px) scale(.9); background: var(--ink); color: var(--bg); padding: 11px 20px; border-radius: 999px; font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: all .3s cubic-bezier(.2,1.3,.3,1); z-index: 60; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="brand">Quill<span>.</span></div>
+    <button class="icon-btn" id="toolsBtn" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1z"></path></svg>
+    </button>
+  </header>
+
+  <main>
+    <!-- HOME: infinite feed -->
+    <section class="view active" id="view-home">
+      <div class="chip-row" id="homeFilters" style="margin:0 20px 10px;"></div>
+      <div class="feed" id="feed"></div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section class="view" id="view-categories">
+      <div class="scroll-pad">
+        <h1 class="page-title" id="catTitle">Categories</h1>
+        <p class="page-note" id="catNote">Pick a mood or theme to explore.</p>
+        <div id="catGrid" class="cat-grid"></div>
+        <div id="catQuoteList"></div>
+      </div>
+    </section>
+
+    <!-- FAVORITES -->
+    <section class="view" id="view-favorites">
+      <div class="scroll-pad">
+        <h1 class="page-title">Favorites</h1>
+        <p class="page-note">Every quote you've loved, kept in one place.</p>
+        <div id="favList"></div>
+      </div>
+    </section>
+
+    <!-- SEARCH -->
+    <section class="view" id="view-search">
+      <div class="scroll-pad">
+        <h1 class="page-title">Search</h1>
+        <p class="page-note" id="searchNote">Try a word like "success", "love" or "study".</p>
+        <div class="mode-toggle">
+          <button type="button" id="modeKeywordBtn" class="active">Keyword</button>
+          <button type="button" id="modeAuthorBtn">By Author</button>
+        </div>
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+          <input type="text" id="searchInput" placeholder="Search quotes, authors, topics…" autocomplete="off">
+        </div>
+        <div id="searchList"></div>
+      </div>
+    </section>
+
+    <!-- AI GENERATE -->
+    <section class="view" id="view-ai">
+      <div class="scroll-pad">
+        <h1 class="page-title">Generate</h1>
+        <p class="page-note">Tell Quill what you need, or tap a mood.</p>
+        <div class="mood-grid" id="moodGrid"></div>
+        <div class="ai-input-row">
+          <input type="text" id="aiInput" placeholder="e.g. I need motivation for exams">
+          <button class="ai-go-btn" id="aiGoBtn" aria-label="Generate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>
+          </button>
+        </div>
+        <div id="aiResultWrap"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-view="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"></path><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"></path></svg>
+      <span>Home</span>
+    </button>
+    <button class="tab-btn" data-view="categories">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+      <span>Categories</span>
+    </button>
+    <button class="tab-btn" data-view="favorites">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+      <span>Favorites</span>
+    </button>
+    <button class="tab-btn" data-view="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+      <span>Search</span>
+    </button>
+    <button class="tab-btn" data-view="ai">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6z"></path></svg>
+      <span>Generate</span>
+    </button>
+  </nav>
+
+  <div class="sheet-overlay" id="sheetOverlay">
+    <div class="sheet">
+      <h3>Settings</h3>
+      <div class="tool-row">
+        <div style="font-size:14px;">Theme color</div>
+        <div class="theme-swatches" id="themeSwatches"></div>
+      </div>
+      <div class="tool-row">
+        <div style="font-size:14px;">Quote font</div>
+        <div class="font-toggle">
+          <button type="button" id="fontDefaultBtn" class="active">Fraunces</button>
+          <button type="button" id="fontAltBtn">Playfair</button>
+        </div>
+      </div>
+      <div class="tool-row">
+        <div style="font-size:14px;">Text size</div>
+        <div class="size-controls"><button id="sizeDown">A-</button><button id="sizeUp">A+</button></div>
+      </div>
+      <div class="tool-row">
+        <div style="font-size:14px;">Dark mode</div>
+        <div class="switch" id="darkSwitch"></div>
+      </div>
+      <div class="tool-row" style="border-bottom:none;">
+        <div style="font-size:14px;">Clear favorites</div>
+        <button class="clear-btn-sm" id="clearFavBtn">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="shareOverlay">
+    <div class="sheet">
+      <h3>Share this quote</h3>
+      <div class="share-grid" id="shareGrid"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var categories = [
+    { key: "motivation", label: "Motivation", color: "#FF6F59" },
+    { key: "love", label: "Love", color: "#E4567B" },
+    { key: "life", label: "Life", color: "#4C5FD5" },
+    { key: "success", label: "Success", color: "#2FA86D" },
+    { key: "friendship", label: "Friendship", color: "#E8A33D" },
+    { key: "sad", label: "Sad", color: "#6C7A93" },
+    { key: "wisdom", label: "Wisdom", color: "#7C5CD1" },
+    { key: "funny", label: "Funny", color: "#D9A400" },
+    { key: "study", label: "Study", color: "#2E9CCA" },
+    { key: "self-growth", label: "Self-Growth", color: "#C0587A" }
+  ];
+  function catMeta(key) { return categories.find(function (c) { return c.key === key; }) || categories[0]; }
+
+  var raw = {
+    motivation: [
+      ["Push yourself, because no one else is going to do it for you.", "Unknown"],
+      ["Great things never come from comfort zones.", "Unknown"],
+      ["Dream it. Wish it. Do it.", "Unknown"],
+      ["The harder you work for something, the greater you'll feel when you achieve it.", "Unknown"],
+      ["Don't stop when you're tired. Stop when you're done.", "Unknown"],
+      ["Little things make big days.", "Unknown"],
+      ["It's going to be hard, but hard does not mean impossible.", "Unknown"],
+      ["Don't wait for opportunity. Create it.", "Unknown"],
+      ["Sometimes we're tested not to show our weaknesses, but to discover our strengths.", "Unknown"],
+      ["The key to success is to focus on goals, not obstacles.", "Unknown"],
+      ["Believe you can and you're halfway there.", "Theodore Roosevelt"],
+      ["Energy and persistence conquer all things.", "Benjamin Franklin"]
+    ],
+    love: [
+      ["Being deeply loved by someone gives you strength, while loving someone deeply gives you courage.", "Lao Tzu"],
+      ["Love is composed of a single soul inhabiting two bodies.", "Aristotle"],
+      ["Where there is love there is life.", "Mahatma Gandhi"],
+      ["We are most alive when we're in love.", "John Updike"],
+      ["The best thing to hold onto in life is each other.", "Audrey Hepburn"],
+      ["A loving heart is the truest wisdom.", "Charles Dickens"],
+      ["To love and be loved is to feel the sun from both sides.", "David Viscott"],
+      ["Love is friendship that has caught fire.", "Ann Landers"],
+      ["Love does not dominate; it cultivates.", "Johann Wolfgang von Goethe"],
+      ["Love is an untamed force.", "bell hooks"],
+      ["Whatever our souls are made of, his and mine are the same.", "Emily Bronte"],
+      ["Love recognizes no barriers.", "Unknown"]
+    ],
+    life: [
+      ["Life is what happens when you're busy making other plans.", "John Lennon"],
+      ["In the end, it's not the years in your life that count. It's the life in your years.", "Abraham Lincoln"],
+      ["Life is really simple, but we insist on making it complicated.", "Confucius"],
+      ["Life is 10% what happens to us and 90% how we react to it.", "Charles R. Swindoll"],
+      ["The purpose of our lives is to be happy.", "Dalai Lama"],
+      ["Get busy living or get busy dying.", "Stephen King"],
+      ["You only live once, but if you do it right, once is enough.", "Mae West"],
+      ["Many of life's failures are people who did not realize how close they were to success when they gave up.", "Thomas Edison"],
+      ["Life is either a daring adventure or nothing at all.", "Helen Keller"],
+      ["The good life is one inspired by love and guided by knowledge.", "Bertrand Russell"],
+      ["Life shrinks or expands in proportion to one's courage.", "Anais Nin"],
+      ["Twenty years from now you will be more disappointed by the things you didn't do than by the ones you did.", "Mark Twain"]
+    ],
+    success: [
+      ["Success is not final, failure is not fatal: it is the courage to continue that counts.", "Winston Churchill"],
+      ["The way to get started is to quit talking and begin doing.", "Walt Disney"],
+      ["Success usually comes to those who are too busy to be looking for it.", "Henry David Thoreau"],
+      ["Don't be afraid to give up the good to go for the great.", "John D. Rockefeller"],
+      ["I find that the harder I work, the more luck I seem to have.", "Thomas Jefferson"],
+      ["Success is walking from failure to failure with no loss of enthusiasm.", "Winston Churchill"],
+      ["The road to success and the road to failure are almost exactly the same.", "Colin R. Davis"],
+      ["Opportunities don't happen, you create them.", "Chris Grosser"],
+      ["Try not to become a person of success, but rather try to become a person of value.", "Albert Einstein"],
+      ["Success is not in what you have, but who you are.", "Bo Bennett"],
+      ["Success is liking yourself, liking what you do, and liking how you do it.", "Maya Angelou"],
+      ["The only place where success comes before work is in the dictionary.", "Vidal Sassoon"]
+    ],
+    friendship: [
+      ["A real friend is one who walks in when the rest of the world walks out.", "Walter Winchell"],
+      ["Friendship is born at that moment when one person says to another, 'What! You too?'", "C.S. Lewis"],
+      ["The only way to have a friend is to be one.", "Ralph Waldo Emerson"],
+      ["A friend is someone who knows all about you and still loves you.", "Elbert Hubbard"],
+      ["Friends are the family we choose for ourselves.", "Edna Buchanan"],
+      ["True friendship comes when the silence between two people is comfortable.", "David Tyson"],
+      ["It is one of the blessings of old friends that you can afford to be stupid with them.", "Ralph Waldo Emerson"],
+      ["Friendship is the only cement that will hold the world together.", "Woodrow Wilson"],
+      ["A good friend is a connection to life.", "Lois Wyse"],
+      ["Walking with a friend in the dark is better than walking alone in the light.", "Helen Keller"],
+      ["Friendship doubles our joy and divides our grief.", "Swedish Proverb"],
+      ["Rare as is true love, true friendship is rarer.", "Jean de La Fontaine"]
+    ],
+    sad: [
+      ["Tears come from the heart and not from the brain.", "Leonardo da Vinci"],
+      ["The word 'happy' would lose its meaning if it were not balanced by sadness.", "Carl Jung"],
+      ["Every human walks around with a certain kind of sadness, even if it doesn't always show.", "Unknown"],
+      ["Sadness flies away on the wings of time.", "Jean de La Fontaine"],
+      ["There is a sacredness in tears.", "Washington Irving"],
+      ["The deeper the sorrow, the closer is God.", "Kahlil Gibran"],
+      ["Sometimes you need to sit lonely on the floor in a quiet room in order to hear your own voice.", "Unknown"],
+      ["What soap is for the body, tears are for the soul.", "Jewish Proverb"],
+      ["Every storm runs out of rain.", "Unknown"],
+      ["Even the darkest night will end and the sun will rise.", "Victor Hugo"],
+      ["Sorrow is one of the vibrations that prove the fact of living.", "Zora Neale Hurston"],
+      ["The pain passes, but the beauty remains.", "Pierre-Auguste Renoir"]
+    ],
+    wisdom: [
+      ["The only true wisdom is in knowing you know nothing.", "Socrates"],
+      ["Turn your face to the sun and the shadows fall behind you.", "Maori Proverb"],
+      ["Knowing yourself is the beginning of all wisdom.", "Aristotle"],
+      ["The fool doth think he is wise, but the wise man knows himself to be a fool.", "William Shakespeare"],
+      ["Patience is the companion of wisdom.", "Saint Augustine"],
+      ["It is the mark of an educated mind to be able to entertain a thought without accepting it.", "Aristotle"],
+      ["The journey of a thousand miles begins with a single step.", "Lao Tzu"],
+      ["He who knows others is wise; he who knows himself is enlightened.", "Lao Tzu"],
+      ["Wisdom begins in wonder.", "Socrates"],
+      ["Yesterday is history, tomorrow is a mystery, today is a gift.", "Eleanor Roosevelt"],
+      ["A wise man can learn more from a foolish question than a fool can learn from a wise answer.", "Bruce Lee"],
+      ["The unexamined life is not worth living.", "Socrates"]
+    ],
+    funny: [
+      ["I'm not lazy, I'm on energy-saving mode.", "Unknown"],
+      ["I used to think I was indecisive, but now I'm not so sure.", "Unknown"],
+      ["The trouble with retirement is that you never get a day off.", "Abe Lemons"],
+      ["I'm on a seafood diet. I see food and I eat it.", "Unknown"],
+      ["Behind every great man is a woman rolling her eyes.", "Jim Carrey"],
+      ["I told my wife she should embrace her mistakes. She gave me a hug.", "Unknown"],
+      ["The early bird gets the worm, but the second mouse gets the cheese.", "Unknown"],
+      ["I am on a whiskey diet. I've lost three days already.", "Tommy Cooper"],
+      ["Common sense is like deodorant. The people who need it most never use it.", "Unknown"],
+      ["My bed is a magical place where I suddenly remember everything I forgot to do.", "Unknown"],
+      ["I'm not arguing, I'm just explaining why I'm right.", "Unknown"],
+      ["Age is merely the number of years the world has been enjoying you.", "Unknown"]
+    ],
+    study: [
+      ["The beautiful thing about learning is that no one can take it away from you.", "B.B. King"],
+      ["Study while others are sleeping; work while others are loafing.", "William A. Ward"],
+      ["An investment in knowledge pays the best interest.", "Benjamin Franklin"],
+      ["Education is the passport to the future, for tomorrow belongs to those who prepare for it today.", "Malcolm X"],
+      ["The expert in anything was once a beginner.", "Helen Hayes"],
+      ["Success is the sum of small efforts repeated day in and day out.", "Robert Collier"],
+      ["Live as if you were to die tomorrow. Learn as if you were to live forever.", "Mahatma Gandhi"],
+      ["The more that you read, the more things you will know.", "Dr. Seuss"],
+      ["Don't let what you cannot do interfere with what you can do.", "John Wooden"],
+      ["Focus on being productive instead of busy.", "Tim Ferriss"],
+      ["Learning never exhausts the mind.", "Leonardo da Vinci"],
+      ["Genius is one percent inspiration and ninety-nine percent perspiration.", "Thomas Edison"]
+    ],
+    "self-growth": [
+      ["What lies behind us and what lies before us are tiny matters compared to what lies within us.", "Ralph Waldo Emerson"],
+      ["The only person you should try to be better than is the person you were yesterday.", "Unknown"],
+      ["Growth is painful. Change is painful. But nothing is as painful as staying stuck where you don't belong.", "Mandy Hale"],
+      ["You are never too old to set another goal or to dream a new dream.", "C.S. Lewis"],
+      ["The struggle you're in today is developing the strength you need for tomorrow.", "Robert Tew"],
+      ["Difficult roads often lead to beautiful destinations.", "Unknown"],
+      ["Comparison is the thief of joy.", "Theodore Roosevelt"],
+      ["What you get by achieving your goals is not as important as what you become by achieving your goals.", "Zig Ziglar"],
+      ["Self-care is not selfish. You cannot serve from an empty vessel.", "Eleanor Brown"],
+      ["Be yourself; everyone else is already taken.", "Oscar Wilde"],
+      ["We cannot become what we want by remaining what we are.", "Max DePree"],
+      ["Do not wait; the time will never be just right.", "Napoleon Hill"]
+    ]
+  };
+
+  var quotesData = [];
+  var idCounter = 1;
+  categories.forEach(function (c) {
+    (raw[c.key] || []).forEach(function (pair) {
+      quotesData.push({ id: idCounter++, cat: c.key, text: pair[0], author: pair[1] });
+    });
+  });
+
+  var themePresets = [
+    { key: "sunset", accent: "#FF6F59", accent2: "#4C5FD5" },
+    { key: "ocean", accent: "#2E9CCA", accent2: "#1B5E8C" },
+    { key: "blossom", accent: "#E4567B", accent2: "#C0587A" },
+    { key: "forest", accent: "#2FA86D", accent2: "#1F6B47" },
+    { key: "berry", accent: "#7C5CD1", accent2: "#4C3B99" }
+  ];
+
+  var LS_FAV = "quill_favorites";
+  var LS_SIZE = "quill_text_size";
+  var LS_THEME = "quill_theme";
+  var LS_ACCENT = "quill_accent";
+  var LS_FONT = "quill_font";
+
+  function safeGet(k, f) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch (e) { return f; } }
+  function safeSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  var favorites = safeGet(LS_FAV, []);
+  var textSize = safeGet(LS_SIZE, 0);
+  var theme = safeGet(LS_THEME, "auto");
+  var accentKey = safeGet(LS_ACCENT, "blossom");
+  var fontAlt = safeGet(LS_FONT, false);
+
+  function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+  function isFav(id) { return favorites.indexOf(id) !== -1; }
+  function toggleFav(id, btnEl) {
+    var i = favorites.indexOf(id);
+    if (i === -1) { favorites.push(id); showToast("Added to favorites ♥"); }
+    else { favorites.splice(i, 1); showToast("Removed from favorites"); }
+    safeSet(LS_FAV, favorites);
+    refreshFavBtns();
+    renderFavorites();
+    if (btnEl) { btnEl.classList.remove("pop"); void btnEl.offsetWidth; btnEl.classList.add("pop"); }
+  }
+  function refreshFavBtns() {
+    document.querySelectorAll(".mini-btn[data-fav-id]").forEach(function (btn) {
+      var idAttr = btn.getAttribute("data-fav-id");
+      var id = isNaN(Number(idAttr)) ? idAttr : Number(idAttr);
+      var active = isFav(id);
+      btn.classList.toggle("active", active);
+      btn.querySelector("svg").setAttribute("fill", active ? "currentColor" : "none");
+    });
+  }
+
+  function showToast(msg) {
+    var t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () { t.classList.remove("show"); }, 1700);
+  }
+  function copyText(text) {
+    var done = function () { showToast("Copied ✓"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(function () { fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
+  var shareTarget = null;
+  function openShare(text, author) {
+    shareTarget = text + " — " + author;
+    var enc = encodeURIComponent(shareTarget);
+    var items = [
+      { name: "WhatsApp", color: "#25D366", url: "https://wa.me/?text=" + enc,
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-5.9c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.1.2-.3.2-.4.1-.1 0-.3 0-.4-.1-.1-.6-1.4-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.1 0 1.2.9 2.4 1 2.6.1.2 1.8 2.7 4.3 3.8.6.3 1.1.4 1.4.5.6.2 1.2.2 1.6.1.5-.1 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1-.1-.1-.2-.2-.4-.3z"/></svg>' },
+      { name: "X", color: "#000000", url: "https://twitter.com/intent/tweet?text=" + enc,
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 3H22l-7.6 8.7L23.3 21H16l-5.1-6.4L5.1 21H2l8.1-9.3L1 3h7.4l4.6 5.9zm-1.3 16h1.8L7.5 5H5.6z"/></svg>' },
+      { name: "Facebook", color: "#1877F2", url: "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent("https://claude.ai") + "&quote=" + enc,
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 22v-8.3h2.8l.4-3.2h-3.2V8.4c0-.9.3-1.6 1.7-1.6h1.7V3.9c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.5-4 4.1v2.6H7.7v3.2h2.8V22z"/></svg>' },
+      { name: "More", color: "#4C5FD5", url: "#",
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>' }
+    ];
+    document.getElementById("shareGrid").innerHTML = items.map(function (it) {
+      return '<a class="share-item" href="' + it.url + '" target="_blank" rel="noopener" data-native="' + (it.name === "More" ? "1" : "0") + '">' +
+        '<span class="share-icon" style="background:' + it.color + '">' + it.icon + '</span>' + it.name + '</a>';
+    }).join("");
+    document.getElementById("shareOverlay").classList.add("show");
+  }
+
+  function favBtn(id) {
+    var active = isFav(id);
+    return '<button class="mini-btn' + (active ? ' active' : '') + '" data-fav-id="' + id + '" onclick="Quill.fav(' + (typeof id === "string" ? "'" + id + "'" : id) + ', this)" aria-label="Favorite">' +
+      '<svg viewBox="0 0 24 24" fill="' + (active ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"></path></svg></button>';
+  }
+  function findQuote(id) { return quotesData.find(function (q) { return q.id === id; }); }
+
+  function quoteListCard(q) {
+    return '<div class="quote-card"><p class="quote-text">' + esc(q.text) + '</p>' +
+      '<div class="quote-footer"><span class="quote-author">' + esc(q.author) + '</span>' +
+      '<div class="action-row">' + favBtn(q.id) +
+      '<button class="mini-btn" onclick="Quill.copy(' + (typeof q.id === "string" ? "'" + q.id + "'" : q.id) + ')" aria-label="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>' +
+      '<button class="mini-btn" onclick="Quill.share(' + (typeof q.id === "string" ? "'" + q.id + "'" : q.id) + ')" aria-label="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="2.5"></circle><circle cx="6" cy="12" r="2.5"></circle><circle cx="18" cy="19" r="2.5"></circle><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"></path></svg></button>' +
+      '</div></div></div>';
+  }
+
+  /* ---------------- Infinite feed ---------------- */
+  var homeFilter = "all";
+  var revealObserver = null;
+  function shuffled(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function poolForFilter() {
+    return homeFilter === "all" ? quotesData : quotesData.filter(function (q) { return q.cat === homeFilter; });
+  }
+  function feedItemHTML(q, isToday) {
+    var meta = catMeta(q.cat);
+    return '<div class="feed-item"><div class="feed-card' + (isToday ? ' today' : '') + '">' +
+      '<div class="feed-tag-row">' +
+      (isToday ? '<span class="today-label">✦ TODAY\'S PICK</span>' : '<span class="cat-tag" style="background:' + meta.color + '">' + meta.label + '</span>') +
+      '</div>' +
+      '<p class="feed-text">' + esc(q.text) + '</p>' +
+      '<div class="feed-footer"><span class="feed-author">' + esc(q.author) + '</span>' +
+      '<div class="action-row">' + favBtn(q.id) +
+      '<button class="mini-btn" onclick="Quill.copy(' + q.id + ')" aria-label="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>' +
+      '<button class="mini-btn" onclick="Quill.share(' + q.id + ')" aria-label="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="2.5"></circle><circle cx="6" cy="12" r="2.5"></circle><circle cx="18" cy="19" r="2.5"></circle><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"></path></svg></button>' +
+      '</div></div></div></div>';
+  }
+  var feedEl;
+  function todayQuote() {
+    var d = new Date();
+    var seed = d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate();
+    return quotesData[seed % quotesData.length];
+  }
+  function observeFeedCards() {
+    var cards = feedEl.querySelectorAll(".feed-card:not(.in-view)");
+    cards.forEach(function (c, i) {
+      var tilt = (Math.random() * 2 - 1).toFixed(2);
+      c.style.setProperty("--tilt", tilt + "deg");
+      setTimeout(function () { c.classList.add("in-view"); }, 60 + i * 70);
+    });
+    if (window.IntersectionObserver && feedEl.querySelectorAll(".feed-card").length) {
+      if (!revealObserver) {
+        revealObserver = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in-view"); revealObserver.unobserve(en.target); } });
+        }, { root: feedEl, threshold: 0.01 });
+      }
+      cards.forEach(function (c) { revealObserver.observe(c); });
+    }
+  }
+  function buildFeed() {
+    feedEl = document.getElementById("feed");
+    feedEl.innerHTML = "";
+    var pool = poolForFilter();
+    var batch = shuffled(pool);
+    var html = feedItemHTML(todayQuote(), true) + batch.map(function (q) { return feedItemHTML(q, false); }).join("") +
+      '<div class="scroll-hint">✦ keep scrolling for more ✦</div>';
+    feedEl.innerHTML = html;
+    feedEl.scrollTop = 0;
+    observeFeedCards();
+  }
+  function appendMore() {
+    var pool = poolForFilter();
+    var batch = shuffled(pool);
+    var hint = feedEl.querySelector(".scroll-hint");
+    var html = batch.map(function (q) { return feedItemHTML(q, false); }).join("");
+    if (hint) { hint.insertAdjacentHTML("beforebegin", html); }
+    else { feedEl.insertAdjacentHTML("beforeend", html + '<div class="scroll-hint">✦ keep scrolling for more ✦</div>'); }
+    observeFeedCards();
+  }
+  function onFeedScroll() {
+    if (!feedEl) return;
+    if (feedEl.scrollTop + feedEl.clientHeight >= feedEl.scrollHeight - 400) { appendMore(); }
+  }
+  function renderHomeFilters() {
+    var wrap = document.getElementById("homeFilters");
+    var filters = [["all", "All"]].concat(categories.map(function (c) { return [c.key, c.label]; }));
+    wrap.innerHTML = filters.map(function (f) {
+      return '<button class="chip' + (homeFilter === f[0] ? ' active' : '') + '" onclick="Quill.setFilter(\'' + f[0] + '\')">' + f[1] + '</button>';
+    }).join("");
+  }
+
+  /* ---------------- Categories ---------------- */
+  var activeCat = null;
+  function renderCategoryGrid() {
+    document.getElementById("catGrid").innerHTML = categories.map(function (c) {
+      var count = quotesData.filter(function (q) { return q.cat === c.key; }).length;
+      return '<div class="cat-tile" style="background:' + c.color + '" onclick="Quill.openCat(\'' + c.key + '\')">' +
+        '<span class="cat-name">' + c.label + '</span><span class="cat-count">' + count + ' quotes</span></div>';
+    }).join("");
+  }
+  function openCat(key) {
+    activeCat = key;
+    var meta = catMeta(key);
+    document.getElementById("catGrid").style.display = "none";
+    document.getElementById("catTitle").textContent = meta.label;
+    document.getElementById("catNote").innerHTML = '<span style="cursor:pointer;color:var(--accent);font-weight:600;" onclick="Quill.backToCats()">← All categories</span>';
+    var list = quotesData.filter(function (q) { return q.cat === key; });
+    document.getElementById("catQuoteList").innerHTML = list.map(quoteListCard).join("");
+  }
+  function backToCats() {
+    activeCat = null;
+    document.getElementById("catGrid").style.display = "grid";
+    document.getElementById("catTitle").textContent = "Categories";
+    document.getElementById("catNote").textContent = "Pick a mood or theme to explore.";
+    document.getElementById("catQuoteList").innerHTML = "";
+  }
+
+  function renderFavorites() {
+    var list = quotesData.filter(function (q) { return isFav(q.id); });
+    document.getElementById("favList").innerHTML = list.length
+      ? list.map(quoteListCard).join("")
+      : '<div class="empty-state"><div class="emoji">🤍</div><p>No favorites yet. Tap the heart on any quote to save it here.</p></div>';
+  }
+
+  /* ---------------- Search (keyword + author) ---------------- */
+  var searchMode = "keyword";
+  var activeAuthor = null;
+  function uniqueAuthors() {
+    var seen = {}; var list = [];
+    quotesData.forEach(function (q) { if (!seen[q.author]) { seen[q.author] = true; list.push(q.author); } });
+    return list.sort(function (a, b) { return a.localeCompare(b); });
+  }
+  function renderSearch(query) {
+    query = (query || "").trim().toLowerCase();
+    var container = document.getElementById("searchList");
+    if (searchMode === "author") {
+      if (activeAuthor) {
+        var mine = quotesData.filter(function (q) { return q.author === activeAuthor; });
+        container.innerHTML = '<div style="margin-bottom:10px;"><span style="cursor:pointer;color:var(--accent);font-weight:600;font-size:13px;" onclick="Quill.backToAuthors()">← All authors</span></div>' +
+          '<h1 class="page-title" style="font-size:18px;">' + esc(activeAuthor) + '</h1>' +
+          mine.map(quoteListCard).join("");
+        return;
+      }
+      var authors = uniqueAuthors().filter(function (a) { return !query || a.toLowerCase().indexOf(query) !== -1; });
+      container.innerHTML = authors.length
+        ? '<div class="author-grid">' + authors.map(function (a) {
+            return '<button class="author-chip" onclick="Quill.openAuthor(\'' + a.replace(/'/g, "\\'") + '\')">' + esc(a) + '</button>';
+          }).join("") + '</div>'
+        : '<div class="empty-state"><div class="emoji">🕊️</div><p>No author matched that name.</p></div>';
+      return;
+    }
+    if (!query) { container.innerHTML = '<div class="empty-state"><div class="emoji">🔎</div><p>Search by keyword, author, or category name.</p></div>'; return; }
+    var results = quotesData.filter(function (q) {
+      return q.text.toLowerCase().indexOf(query) !== -1 ||
+             q.author.toLowerCase().indexOf(query) !== -1 ||
+             catMeta(q.cat).label.toLowerCase().indexOf(query) !== -1;
+    });
+    container.innerHTML = results.length ? results.map(quoteListCard).join("")
+      : '<div class="empty-state"><div class="emoji">🕊️</div><p>No quotes matched that search.</p></div>';
+  }
+  function setSearchMode(mode) {
+    searchMode = mode; activeAuthor = null;
+    document.getElementById("modeKeywordBtn").classList.toggle("active", mode === "keyword");
+    document.getElementById("modeAuthorBtn").classList.toggle("active", mode === "author");
+    document.getElementById("searchInput").placeholder = mode === "author" ? "Type an author's name…" : "Search quotes, authors, topics…";
+    document.getElementById("searchNote").textContent = mode === "author" ? "Tap an author to see everything they wrote." : 'Try a word like "success", "love" or "study".';
+    document.getElementById("searchInput").value = "";
+    renderSearch("");
+  }
+  function openAuthor(name) { activeAuthor = name; renderSearch(""); }
+  function backToAuthors() { activeAuthor = null; renderSearch(document.getElementById("searchInput").value); }
+
+  var moods = [
+    { label: "😊 Happy", prompt: "I'm feeling happy today" },
+    { label: "😔 Sad", prompt: "I'm feeling a bit sad" },
+    { label: "🔥 Motivated", prompt: "I need motivation to keep going" },
+    { label: "❤️ Romantic", prompt: "I'm feeling romantic" },
+    { label: "😌 Calm", prompt: "I want to feel calm and at peace" },
+    { label: "😤 Angry", prompt: "I'm feeling frustrated and angry" },
+    { label: "📚 Studying", prompt: "I need motivation for exams" }
+  ];
+  function renderMoods() {
+    document.getElementById("moodGrid").innerHTML = moods.map(function (m) {
+      return '<button class="mood-chip" onclick="Quill.moodPick(' + "'" + m.prompt.replace(/'/g, "\\'") + "'" + ')">' + m.label + '</button>';
+    }).join("");
+  }
+  function moodPick(prompt) { document.getElementById("aiInput").value = prompt; runAI(prompt); }
+  var sampleFn = null, aiBusy = false, lastAIQuote = null;
+  function runAI(promptText) {
+    promptText = (promptText || document.getElementById("aiInput").value || "").trim();
+    if (!promptText) { showToast("Type what you need first"); return; }
+    if (aiBusy) return;
+    var wrap = document.getElementById("aiResultWrap");
+    if (!sampleFn) { wrap.innerHTML = '<div class="ai-note">AI generation isn\'t available in this preview. Try again once the app is opened on claude.ai.</div>'; return; }
+    aiBusy = true;
+    wrap.innerHTML = '<div class="ai-result-card"><p class="quote-text thinking-dots">Thinking</p></div>';
+    var instructions = "You write one short, original, uplifting quote (max 25 words) that fits what the user says they need, followed by a made-up but plausible-sounding fictional author name on a new line starting with '— '. No preamble, no quotation marks, just the quote line then the author line.";
+    sampleFn(instructions + "\n\nUser need: " + promptText, {
+      onText: function (evt) { wrap.innerHTML = '<div class="ai-result-card"><p class="quote-text">' + esc(evt.text) + '</p></div>'; }
+    }).then(function (res) {
+      aiBusy = false;
+      var lines = res.text.trim().split("\n").filter(Boolean);
+      var qText = lines[0] || res.text.trim();
+      var qAuthor = (lines[1] || "— Quill AI").replace(/^—\s*/, "");
+      lastAIQuote = { text: qText.replace(/^"|"$/g, ""), author: qAuthor };
+      renderAIResult();
+    }).catch(function () { aiBusy = false; wrap.innerHTML = '<div class="ai-note">Couldn\'t generate right now — please try again.</div>'; });
+  }
+  function renderAIResult() {
+    if (!lastAIQuote) return;
+    document.getElementById("aiResultWrap").innerHTML =
+      '<div class="ai-result-card"><p class="quote-text">' + esc(lastAIQuote.text) + '</p>' +
+      '<span class="feed-author">— ' + esc(lastAIQuote.author) + '</span>' +
+      '<div class="ai-actions"><button onclick="Quill.aiRegenerate()">Regenerate</button><button onclick="Quill.aiCopy()">Copy</button><button class="primary" onclick="Quill.aiSave()">Save</button></div></div>';
+  }
+  function aiRegenerate() { runAI(document.getElementById("aiInput").value); }
+  function aiCopy() { if (lastAIQuote) copyText(lastAIQuote.text + " — " + lastAIQuote.author); }
+  function aiSave() {
+    if (!lastAIQuote) return;
+    var id = "ai_" + Date.now();
+    quotesData.push({ id: id, cat: "self-growth", text: lastAIQuote.text, author: lastAIQuote.author });
+    favorites.push(id);
+    safeSet(LS_FAV, favorites);
+    showToast("Saved to favorites ✓");
+    renderFavorites();
+  }
+
+  function switchView(name) {
+    document.querySelectorAll(".view").forEach(function (v) { v.classList.remove("active"); });
+    document.getElementById("view-" + name).classList.add("active");
+    document.querySelectorAll(".tab-btn").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-view") === name); });
+  }
+  function applyTextSize() { var scale = 1 + textSize * 0.08; document.getElementById("app").style.fontSize = (16 * scale) + "px"; }
+  function applyTheme() {
+    var root = document.documentElement;
+    if (theme === "dark") root.setAttribute("data-theme", "dark");
+    else if (theme === "light") root.setAttribute("data-theme", "light");
+    else root.removeAttribute("data-theme");
+    document.getElementById("darkSwitch").classList.toggle("on", theme === "dark");
+  }
+  function applyAccent() {
+    var preset = themePresets.find(function (p) { return p.key === accentKey; }) || themePresets[0];
+    document.documentElement.style.setProperty("--accent", preset.accent);
+    document.documentElement.style.setProperty("--accent-2", preset.accent2);
+    document.documentElement.style.setProperty("--accent-soft", preset.accent + "26");
+    document.documentElement.style.setProperty("--accent-2-soft", preset.accent2 + "22");
+    document.querySelectorAll(".swatch").forEach(function (s) { s.classList.toggle("active", s.getAttribute("data-key") === accentKey); });
+  }
+  function renderThemeSwatches() {
+    document.getElementById("themeSwatches").innerHTML = themePresets.map(function (p) {
+      return '<div class="swatch' + (p.key === accentKey ? ' active' : '') + '" data-key="' + p.key + '" style="background:linear-gradient(135deg,' + p.accent + ',' + p.accent2 + ')" onclick="Quill.setAccent(\'' + p.key + '\')"></div>';
+    }).join("");
+  }
+  function applyFont() {
+    document.getElementById("app").classList.toggle("font-alt", fontAlt);
+    document.getElementById("fontDefaultBtn").classList.toggle("active", !fontAlt);
+    document.getElementById("fontAltBtn").classList.toggle("active", fontAlt);
+  }
+
+  window.Quill = {
+    fav: toggleFav,
+    copy: function (id) { var q = findQuote(id); if (q) copyText(q.text + " — " + q.author); },
+    share: function (id) { var q = findQuote(id); if (q) openShare(q.text, q.author); },
+    openCat: openCat,
+    backToCats: backToCats,
+    moodPick: moodPick,
+    aiRegenerate: aiRegenerate,
+    aiCopy: aiCopy,
+    aiSave: aiSave,
+    setFilter: function (f) { homeFilter = f; renderHomeFilters(); buildFeed(); },
+    openAuthor: openAuthor,
+    backToAuthors: backToAuthors,
+    setAccent: function (key) { accentKey = key; safeSet(LS_ACCENT, key); applyAccent(); }
+  };
+
+  document.addEventListener("DOMContentLoaded", function () {
+    applyTextSize();
+    applyTheme();
+    applyAccent();
+    applyFont();
+    renderThemeSwatches();
+    renderMoods();
+    renderHomeFilters();
+    buildFeed();
+    renderCategoryGrid();
+    renderFavorites();
+    renderSearch("");
+
+    if (window.claude && window.claude.use) {
+      window.claude.use("sample").then(function (fn) { sampleFn = fn; }).catch(function () { sampleFn = null; });
+    }
+
+    feedEl = document.getElementById("feed");
+    feedEl.addEventListener("scroll", onFeedScroll);
+
+    document.querySelectorAll(".tab-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () { switchView(btn.getAttribute("data-view")); });
+    });
+    document.getElementById("searchInput").addEventListener("input", function (e) { renderSearch(e.target.value); });
+    document.getElementById("modeKeywordBtn").addEventListener("click", function () { setSearchMode("keyword"); });
+    document.getElementById("modeAuthorBtn").addEventListener("click", function () { setSearchMode("author"); });
+    document.getElementById("aiGoBtn").addEventListener("click", function () { runAI(); });
+    document.getElementById("aiInput").addEventListener("keydown", function (e) { if (e.key === "Enter") runAI(); });
+
+    document.getElementById("toolsBtn").addEventListener("click", function () { document.getElementById("sheetOverlay").classList.add("show"); });
+    document.getElementById("sheetOverlay").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("show"); });
+    document.getElementById("shareOverlay").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("show"); });
+    document.getElementById("shareGrid").addEventListener("click", function (e) {
+      var a = e.target.closest(".share-item");
+      if (a && a.getAttribute("data-native") === "1") {
+        e.preventDefault();
+        if (navigator.share) { navigator.share({ text: shareTarget }).catch(function () {}); }
+        else { copyText(shareTarget); }
+        document.getElementById("shareOverlay").classList.remove("show");
+      } else if (a) { document.getElementById("shareOverlay").classList.remove("show"); }
+    });
+    document.getElementById("sizeUp").addEventListener("click", function () { if (textSize < 3) { textSize++; safeSet(LS_SIZE, textSize); applyTextSize(); } });
+    document.getElementById("sizeDown").addEventListener("click", function () { if (textSize > -2) { textSize--; safeSet(LS_SIZE, textSize); applyTextSize(); } });
+    document.getElementById("darkSwitch").addEventListener("click", function () { theme = theme === "dark" ? "light" : "dark"; safeSet(LS_THEME, theme); applyTheme(); });
+    document.getElementById("fontDefaultBtn").addEventListener("click", function () { fontAlt = false; safeSet(LS_FONT, fontAlt); applyFont(); });
+    document.getElementById("fontAltBtn").addEventListener("click", function () { fontAlt = true; safeSet(LS_FONT, fontAlt); applyFont(); });
+    document.getElementById("clearFavBtn").addEventListener("click", function () { favorites = []; safeSet(LS_FAV, favorites); renderFavorites(); refreshFavBtns(); showToast("Favorites cleared"); });
+  });
+})();
+</script>
+</body>
+</html>
